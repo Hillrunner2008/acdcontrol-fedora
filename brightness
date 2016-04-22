@@ -1,0 +1,53 @@
+#!/bin/bash
+HIDDEV="/dev/usb/hiddev1"
+BRIGHTNESS=`acdcontrol $HIDDEV | grep -E '=[[:digit:]]*' -o | grep -E '[[:digit:]]*' -o`
+ 
+OPERAND=$2
+
+if (("$#" == 0)); then
+    echo "Current Brightness=${BRIGHTNESS}"
+    exit 0
+fi 
+
+
+if [ "$#" -ne 2 ]; then
+    echo "Illegal number of parameters"
+    echo "example: brightness up 100"
+    exit 1
+fi 
+
+case "$1" in
+        up )
+                BRIGHTNESS=$((BRIGHTNESS + OPERAND))
+                ;;
+ 
+        down )
+                BRIGHTNESS=$((BRIGHTNESS - OPERAND))
+                ;;
+ 
+        set )
+                BRIGHTNESS=$2
+                ;;
+ 
+        * )
+                echo"Usage: $0 {up|down|set} value"
+                echo""
+                echo"The value is usually in per mille (one tenth of percent). 
+Depends on monitor type."
+                echo""
+                echo"Example:"
+                echo"$0 up 50 Increase brightness by 5%"
+                echo"$0 down 50 Decrease brightness by 5%"
+                echo"$0 set 500 Set brightness to 50%"
+                ;;
+esac
+ 
+if (($BRIGHTNESS < 10)); then
+  BRIGHTNESS=10
+fi
+ 
+if (("$BRIGHTNESS" > "1000")); then
+  BRIGHTNESS=1000
+fi
+ 
+acdcontrol $HIDDEV $BRIGHTNESS> /dev/null
